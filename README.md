@@ -1,106 +1,89 @@
-Expense Management
-Problem Statement
-Companies often struggle with manual expense reimbursement processes that are time-consuming, error-prone, and lack transparency. This project aims to solve these issues by providing a streamlined and automated solution.
+# 💰 Expense Management System
 
-Core Features
-Authentication & User Management
+## 📋 Overview
+The **Expense Management System** is designed to streamline company reimbursement processes by automating expense submission, approval workflows, and reporting. It eliminates manual, error-prone methods and introduces multi-level approval, conditional rules, and OCR-based receipt scanning for a smooth, transparent experience.
 
-Automated Setup: On the first login/signup, a new company and an admin user are automatically created. The company's currency is set based on the selected country.
+---
 
+## 🚀 Core Features
 
-Admin Capabilities: Admins can create and manage employees and managers , assign roles , and define manager-employee relationships.
+### 👤 Authentication & User Management
+- **Auto Company & Admin Creation**: On first signup, a new company is created automatically based on the selected country’s currency.
+- **Role Management**:
+  - Admin: Create Managers and Employees, assign/change roles.
+  - Manager: Approve/reject team expenses.
+  - Employee: Submit and track expense claims.
+- **Dynamic Role Relationships**: Define manager hierarchies for employees.
 
+---
 
+### 💼 Expense Submission (Employee)
+Employees can:
+- Submit expense claims with:
+  - Amount (can differ from company currency)
+  - Category, Description, Date
+- Upload and scan receipts using **OCR** (auto-detects amount, date, category, merchant, etc.)
+- View their full expense history (approved, rejected, pending).
 
-Expense Submission (Employee Role)
+---
 
-Submit Claims: Employees can submit expense claims with details like amount, category, description, and date.
+### ✅ Approval Workflow (Manager/Admin)
+- Supports **multi-level approvals** with ordered sequences (e.g., Manager → Finance → Director).
+- Expenses automatically move to the next approver after current approval/rejection.
+- Managers can:
+  - View pending approvals.
+  - Approve/Reject with comments.
+  - Escalate as per company rules.
 
+---
 
-View History: Employees can view their expense history with the status (Approved, Rejected).
+### ⚙️ Conditional Approval Rules
+Define flexible approval logic:
+- **Percentage Rule:** e.g., 60% of approvers must approve.
+- **Specific Approver Rule:** e.g., If CFO approves → auto-approved.
+- **Hybrid Rule:** Combination of percentage and specific approvers.
+- Supports combining multi-level + conditional rules.
 
-Approval Workflow (Manager/Admin Role)
+---
 
-Multi-level Approvals: The system supports multi-level approval workflows. An expense is first approved by the employee's manager.
+### 🔐 Role Permissions
 
+| Role | Permissions |
+|------|--------------|
+| **Admin** | Manage company, users, roles, approval rules; view/override all expenses |
+| **Manager** | Approve/reject team expenses, view in company currency, escalate |
+| **Employee** | Submit expenses, view status, upload receipts |
 
+---
 
-Sequential Approvals: Admins can define a sequence of approvers. The expense moves to the next approver only after the current one approves or rejects it.
+## 🧠 Additional Integrations
+- **OCR for Receipts:** Automatically extract expense data from uploaded images.
+- **APIs Used:**
+  - Country & Currency Data → [https://restcountries.com/v3.1/all?fields=name,currencies](https://restcountries.com/v3.1/all?fields=name,currencies)
+  - Currency Conversion → [https://api.exchangerate-api.com/v4/latest/{BASE_CURRENCY}](https://api.exchangerate-api.com/v4/latest/{BASE_CURRENCY})
 
+---
 
+## 🧩 Mockups
+- Excalidraw UI Wireframe: [View Mockup](https://link.excalidraw.com/l/65VNwvy7c4X/4WSLZDTrhkA)
 
-Manager Actions: Managers can view expenses awaiting their approval and approve or reject them with comments.
+---
 
-Conditional Approval Flow
+## 🏗️ Tech Stack (Suggested)
+| Layer | Technology |
+|-------|-------------|
+| **Frontend** | React.js / Next.js, Tailwind CSS |
+| **Backend** | Node.js / Express.js |
+| **Database** | MongoDB / PostgreSQL |
+| **Authentication** | JWT / OAuth 2.0 |
+| **OCR Service** | Tesseract.js / Google Vision API |
+| **Currency API** | ExchangeRate-API |
 
-Flexible Rules: The application supports flexible approval rules, including:
+---
 
+## ⚙️ Setup Instructions
 
-Percentage Rule: An expense is approved if a certain percentage of approvers (e.g., 60%) approve it.
-
-
-Specific Approver Rule: An expense is auto-approved if a specific person (e.g., the CFO) approves it.
-
-
-Hybrid Rule: A combination of percentage and specific approver rules can be used.
-
-Roles & Permissions
-Role	Permissions
-Admin	
-Create company (auto on signup), manage users, set roles, configure approval rules, view all expenses, override approvals.
-
-Manager	
-Approve/reject expenses, view team expenses, escalate as per rules.
-
-Employee	
-Submit expenses, view their own expenses, check approval status.
-
-
-Export to Sheets
-Additional Features
-
-OCR for Receipts: Employees can scan a receipt, and the system will use OCR to automatically create an expense with all the necessary details.
-
-Tech Stack
-Frontend
-Next.js: A React framework for building server-side rendered and statically generated web applications.
-
-React: A JavaScript library for building user interfaces.
-
-TypeScript: A typed superset of JavaScript that compiles to plain JavaScript.
-
-Tailwind CSS: A utility-first CSS framework for rapid UI development.
-
-Shadcn UI: A collection of reusable components built with Radix UI and Tailwind CSS.
-
-Backend
-Node.js & Express: A fast, unopinionated, minimalist web framework for Node.js.
-
-MongoDB & Mongoose: An elegant MongoDB object modeling for Node.js.
-
-JSON Web Token (JWT): For user authentication.
-
-Bcrypt.js: A library for hashing passwords.
-
-Multer: A Node.js middleware for handling multipart/form-data.
-
-Tesseract.js: For OCR functionality to read data from receipts.
-
-Running the Application
-Frontend:
-Navigate to the frontend directory: cd frontend
-
-Install dependencies: npm install
-
-Run the development server: npm run dev
-
-Open http://localhost:3000 with your browser to see the result.
-
-Backend:
-Navigate to the backend directory: cd backend
-
-Install dependencies: npm install
-
-Start the server: npm start
-
-The backend will be running on port 5000.
+### 1️⃣ Clone Repository
+```bash
+git clone https://github.com/your-username/expense-management.git
+cd expense-management
