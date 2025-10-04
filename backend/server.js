@@ -1,6 +1,7 @@
 const express = require('express');
 const connectDB = require('./config/db');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 
@@ -17,6 +18,9 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/expenses', require('./routes/expenses'));
 app.use('/api/company', require('./routes/company'));
 app.use('/api/team', require('./routes/team')); // This line must be present
+
+// Serve uploads folder
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const PORT = process.env.PORT || 5000;
 

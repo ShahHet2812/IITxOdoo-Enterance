@@ -1,6 +1,127 @@
 const Expense = require('../models/Expense');
 const User = require('../models/User');
 const Company = require('../models/Company');
+const { createWorker } = require('tesseract.js');
+
+// Helper function to parse text and extract information
+const parseReceipt = (text) => {
+    const lines = text.split('\n');
+    let amount = null;
+    let date = null;
+    let description = '';
+    let vendor = '';
+    let category = '';
+
+    // Keywords for category detection
+    const categoryKeywords = {
+        'Travel': ['uber', 'lyft', 'taxi', 'airline', 'hotel', 'airbnb'],
+        'Meals & Entertainment': ['restaurant', 'bar', 'cafe', 'food', 'grill'],
+        'Office Supplies': ['staples', 'office depot', 'supplies'],
+        'Software & Subscriptions': ['software', 'subscription', 'aws', 'google'],
+        'Marketing': ['marketing', 'ads', 'advertising'],
+        'Equipment': ['electronics', 'best buy', 'apple store'],
+    };
+    
+    // More robust regex patterns for date matching
+    const dateRegexes = [
+        /(?:\b\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}\b)/, // Matches MM/DD/YYYY, MM-DD-YYYY, etc.
+        /(?:\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s\d{1,2},\s\d{4}\b)/i, // Matches Month DD, YYYY
+        /(?:\b\d{1,2}\s(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*,\s\d{4}\b)/i // Matches DD Month, YYYY
+    ];
+
+    const amountRegex = /(?:total|amount)\s*[:\s]*\$?(\d+\.\d{2})/i;
+
+    // Attempt to get vendor from the first few lines
+    if (lines.length > 0) {
+        vendor = lines[0];
+    }
+
+    // Find date using multiple patterns
+    for (const line of lines) {
+        if (date) break; // Stop if date is already found
+        for (const regex of dateRegexes) {
+            const dateMatch = line.match(regex);
+            if (dateMatch) {
+                // Check if the matched string is a valid date
+                const parsedDate = new Date(dateMatch[0]);
+                if (!isNaN(parsedDate.getTime())) {
+                    date = parsedDate;
+                    break;
+                }
+            }
+        }
+    }
+
+    lines.forEach(line => {
+        const lowerCaseLine = line.toLowerCase();
+
+        const amountMatch = line.match(amountRegex);
+        if (amountMatch && !amount) {
+            amount = parseFloat(amountMatch[1]);
+        }
+
+        // Check for category keywords
+        if (!category) {
+            for (const cat in categoryKeywords) {
+                for (const keyword of categoryKeywords[cat]) {
+                    if (lowerCaseLine.includes(keyword)) {
+                        category = cat;
+                        break;
+                    }
+                }
+                if (category) break;
+            }
+        }
+    });
+
+    // Fallback for amount if "total" or "amount" is not found
+    if (!amount) {
+        const genericAmountRegex = /\$?(\d+\.\d{2})/g;
+        let amounts = [];
+        let match;
+        while ((match = genericAmountRegex.exec(text)) !== null) {
+            amounts.push(parseFloat(match[1]));
+        }
+        if (amounts.length > 0) {
+            amount = Math.max(...amounts); // Assume the largest number is the total
+        }
+    }
+
+    // Use the vendor and a few lines as description
+    description = lines.slice(0, 4).join(' ');
+
+    return {
+        amount,
+        date,
+        description: description || vendor,
+        vendor,
+        category: category || 'Other' // Default to 'Other' if no category is found
+    };
+};
+
+
+// @route   POST api/expenses/scan
+// @desc    Scan a receipt and extract expense data
+exports.scanReceipt = async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ msg: 'No file uploaded' });
+    }
+
+    const worker = await createWorker('eng');
+
+    try {
+        const { data: { text } } = await worker.recognize(req.file.path);
+        await worker.terminate();
+
+        const extractedData = parseReceipt(text);
+
+        res.json(extractedData);
+    } catch (err) {
+        console.error(err.message);
+        await worker.terminate();
+        res.status(500).send('Server Error');
+    }
+};
 
 // @route   POST api/expenses
 // @desc    Create a new expense claim

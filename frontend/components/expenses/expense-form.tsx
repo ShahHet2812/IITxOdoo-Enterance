@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -37,7 +37,10 @@ export function ExpenseForm() {
   const [date, setDate] = useState<Date>()
   const [receipt, setReceipt] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
+  const [scanning, setScanning] = useState(false)
   const [company, setCompany] = useState<Company | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
 
   useEffect(() => {
     const fetchCompany = async () => {
@@ -59,6 +62,35 @@ export function ExpenseForm() {
       setReceipt(e.target.files[0])
     }
   }
+
+  const handleScanReceipt = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        setReceipt(file);
+        setScanning(true);
+
+        const formData = new FormData();
+        formData.append('receipt', file);
+
+        try {
+            const res = await api.post('/expenses/scan', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            const { amount, date, description, category } = res.data;
+            if (amount) setAmount(amount.toString());
+            if (date) setDate(new Date(date));
+            if (description) setDescription(description);
+            if (category) setCategory(category);
+
+        } catch (error) {
+            console.error("Failed to scan receipt", error);
+        } finally {
+            setScanning(false);
+        }
+    }
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -92,7 +124,7 @@ export function ExpenseForm() {
     <Card>
       <CardHeader>
         <CardTitle>Submit New Expense</CardTitle>
-        <CardDescription>Fill in the details of your expense claim</CardDescription>
+        <CardDescription>Fill in the details of your expense claim or scan a receipt to get started.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -171,8 +203,23 @@ export function ExpenseForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="receipt">Receipt Upload (Optional)</Label>
-            <Input id="receipt" type="file" accept="image/*,.pdf" onChange={handleFileChange} />
+            <Label htmlFor="receipt">Receipt (Optional)</Label>
+            <div className="flex gap-2">
+                 <Button type="button" variant="outline" className="flex-1" onClick={() => fileInputRef.current?.click()} disabled={scanning}>
+                    {scanning ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Scanning...
+                        </>
+                    ) : (
+                        <>
+                            <Scan className="mr-2 h-4 w-4" />
+                            Scan Receipt
+                        </>
+                    )}
+                </Button>
+                <Input id="receipt" type="file" accept="image/*" onChange={handleScanReceipt} className="hidden" ref={fileInputRef} />
+             </div>
             {receipt && (
               <p className="text-sm text-muted-foreground flex items-center gap-2 pt-2">
                 <Upload className="h-4 w-4" />
