@@ -66,7 +66,7 @@ export default function ApprovalsPage() {
   const stats = {
     pending: pendingExpenses.length,
     urgent: urgentExpenses.length,
-    approvedToday: 0, // Placeholder
+    
   }
 
   if (loading) {
@@ -84,7 +84,7 @@ export default function ApprovalsPage() {
         <p className="text-muted-foreground">Review and approve pending expense claims</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
@@ -93,26 +93,6 @@ export default function ApprovalsPage() {
           <CardContent>
             <div className="text-2xl font-bold">{stats.pending}</div>
             <p className="text-xs text-muted-foreground">Require your review</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Urgent</CardTitle>
-            <AlertCircle className="h-4 w-4 text-destructive" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.urgent}</div>
-            <p className="text-xs text-muted-foreground">High-value expenses</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Approved Today</CardTitle>
-            <CheckCircle className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.approvedToday}</div>
-            <p className="text-xs text-muted-foreground">Processed expenses</p>
           </CardContent>
         </Card>
       </div>
@@ -124,14 +104,6 @@ export default function ApprovalsPage() {
             {stats.pending > 0 && (
               <Badge variant="secondary" className="ml-2">
                 {stats.pending}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="urgent">
-            Urgent
-            {stats.urgent > 0 && (
-              <Badge variant="destructive" className="ml-2">
-                {stats.urgent}
               </Badge>
             )}
           </TabsTrigger>
@@ -157,28 +129,6 @@ export default function ApprovalsPage() {
               />
             ))
           )}
-        </TabsContent>
-
-        <TabsContent value="urgent" className="space-y-4">
-           {urgentExpenses.length === 0 ? (
-             <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <CheckCircle className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No urgent items</h3>
-                <p className="text-sm text-muted-foreground">No high-value expenses are waiting for your approval.</p>
-              </CardContent>
-            </Card>
-           ) : (
-             urgentExpenses.map((expense) => (
-              <ApprovalCard
-                key={expense.id}
-                expense={expense}
-                onApprove={handleApprove}
-                onReject={handleReject}
-                onEscalate={handleEscalate}
-              />
-            ))
-           )}
         </TabsContent>
       </Tabs>
     </div>
