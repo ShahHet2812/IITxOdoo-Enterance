@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Receipt, Clock, CheckCircle, TrendingUp, Plus, ArrowRight, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import type { Expense, User } from "@/lib/types"
+import type { Expense, User, Company } from "@/lib/types" // FIX: Import Company
 import { format } from "date-fns"
 import api from "@/lib/api" // Import our new API utility
 
 export default function DashboardPage() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
+  const [company, setCompany] = useState<Company | null>(null) // FIX: Add company state
   const [stats, setStats] = useState({
     myExpenses: 0,
     pending: 0,
@@ -29,6 +30,10 @@ export default function DashboardPage() {
         const userRes = await api.get('/auth/me'); 
         const currentUser = userRes.data;
         setUser(currentUser);
+
+        // FIX: Fetch company data
+        const companyRes = await api.get('/company');
+        setCompany(companyRes.data);
 
         // Fetch expenses from the backend
         const expensesRes = await api.get('/expenses');
@@ -150,7 +155,8 @@ export default function DashboardPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${stats.totalAmount.toFixed(2)}</div>
+            {/* FIX: Use company currency symbol */}
+            <div className="text-2xl font-bold">{company?.currencySymbol || '$'}{stats.totalAmount.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">All expenses</p>
           </CardContent>
         </Card>

@@ -24,7 +24,7 @@ export default function ApprovalsPage() {
         const expensesRes = await api.get('/expenses');
         const allExpenses: Expense[] = expensesRes.data;
         
-        // Filter for expenses that are pending AND waiting for this specific user's approval
+        // FIX: Correctly filter for expenses that are pending AND waiting for this specific user's approval
         const expensesForApproval = allExpenses.filter(exp =>
           exp.status === 'pending' && exp.approvalSteps.some(step => step.approver.toString() === user.id && step.status === 'pending')
         );

@@ -21,7 +21,7 @@ export function Sidebar({ role, onLogout }: SidebarProps) {
     { href: "/dashboard/expenses", label: "All Expenses", icon: Receipt },
     { href: "/dashboard/users", label: "Users", icon: Users },
     { href: "/dashboard/workflow", label: "Workflow", icon: GitBranch },
-    { href: "/dashboard/settings", label: "Settings", icon: Settings },
+    { href: "/dashboard/settings", label: "Settings", icon: Settings }, // FIX: Only for Admin
   ]
 
   const managerLinks = [
@@ -29,14 +29,12 @@ export function Sidebar({ role, onLogout }: SidebarProps) {
     { href: "/dashboard/approvals", label: "Approvals", icon: CheckSquare },
     { href: "/dashboard/team", label: "Team", icon: Briefcase },
     { href: "/dashboard/expenses", label: "Expenses", icon: Receipt },
-    { href: "/dashboard/settings", label: "Settings", icon: Settings },
   ]
 
   const employeeLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/dashboard/submit", label: "Submit Expense", icon: Receipt },
     { href: "/dashboard/history", label: "My Expenses", icon: History },
-    { href: "/dashboard/settings", label: "Settings", icon: Settings },
   ]
 
   const links = role === "admin" ? adminLinks : role === "manager" ? managerLinks : employeeLinks

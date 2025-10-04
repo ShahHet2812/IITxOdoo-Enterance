@@ -31,7 +31,7 @@ const categories = [
 export function ExpenseForm() {
   const router = useRouter()
   const [amount, setAmount] = useState("")
-  const [currency, setCurrency] = useState("USD")
+  const [currency, setCurrency] = useState("") // FIX: Set initial currency to empty
   const [category, setCategory] = useState("")
   const [description, setDescription] = useState("")
   const [date, setDate] = useState<Date>()
@@ -110,21 +110,15 @@ export function ExpenseForm() {
               />
             </div>
 
+            {/* FIX: Show currency as read-only */}
             <div className="space-y-2">
               <Label htmlFor="currency">Currency</Label>
-              <Select value={currency} onValueChange={setCurrency} required>
-                <SelectTrigger id="currency">
-                  <SelectValue placeholder="Select currency" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="USD">USD ($)</SelectItem>
-                  <SelectItem value="EUR">EUR (€)</SelectItem>
-                  <SelectItem value="GBP">GBP (£)</SelectItem>
-                  <SelectItem value="JPY">JPY (¥)</SelectItem>
-                  <SelectItem value="CAD">CAD ($)</SelectItem>
-                  <SelectItem value="AUD">AUD ($)</SelectItem>
-                </SelectContent>
-              </Select>
+              <Input
+                id="currency"
+                value={currency}
+                readOnly
+                className="bg-muted"
+              />
             </div>
           </div>
 

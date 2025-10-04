@@ -74,7 +74,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="flex h-screen overflow-hidden bg-background">
         <Sidebar role={user.role} onLogout={handleLogout} />
         <div className="flex flex-1 flex-col overflow-hidden">
-          <Header user={user} notificationCount={3} />
+          {/* FIX: Pass onLogout to Header */}
+          <Header user={user} notificationCount={3} onLogout={handleLogout} />
           <main className="flex-1 overflow-y-auto p-6">{children}</main>
         </div>
       </div>

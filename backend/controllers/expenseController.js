@@ -17,6 +17,25 @@ exports.createExpense = async (req, res) => {
             return res.status(404).json({ msg: 'Company not found' });
         }
 
+        // FIX: Auto-approve if amount is below or equal to the threshold
+        if (amount <= company.approvalThreshold) {
+            const newExpense = new Expense({
+                employee: req.user.id,
+                company: user.company,
+                amount,
+                currency,
+                category,
+                description,
+                date,
+                receiptUrl,
+                approvalWorkflow: [],
+                status: 'approved', // Auto-approved
+            });
+            const expense = await newExpense.save();
+            return res.json(expense);
+        }
+
+
         const approvalSteps = [];
 
         // Step 1: Manager Approval (if required)

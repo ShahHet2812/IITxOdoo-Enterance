@@ -13,14 +13,17 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Bell, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import type { User } from "@/lib/types"
+import { useRouter } from "next/navigation"
 
 interface HeaderProps {
   user: User
   notificationCount?: number
+  onLogout: () => void // FIX: Add onLogout prop
 }
 
-export function Header({ user, notificationCount = 0 }: HeaderProps) {
+export function Header({ user, notificationCount = 0, onLogout }: HeaderProps) {
   const { theme, setTheme } = useTheme()
+  const router = useRouter() // FIX: Add router
 
   const getInitials = (name: string) => {
     return name
@@ -47,14 +50,41 @@ export function Header({ user, notificationCount = 0 }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
-          <Bell className="h-5 w-5" />
-          {notificationCount > 0 && (
-            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center">
-              {notificationCount}
-            </span>
-          )}
-        </Button>
+        {/* FIX: Add Dropdown for Notifications */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
+              <Bell className="h-5 w-5" />
+              {notificationCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center">
+                  {notificationCount}
+                </span>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-80">
+            <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium">New expense from John Doe</p>
+                <p className="text-xs text-muted-foreground">Travel - $150.00</p>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+               <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium">Your expense was approved</p>
+                <p className="text-xs text-muted-foreground">Office Supplies - $45.50</p>
+              </div>
+            </DropdownMenuItem>
+             <DropdownMenuItem>
+               <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium">Team expense report ready</p>
+                <p className="text-xs text-muted-foreground">Q3 2025</p>
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <Button
           variant="ghost"
@@ -82,10 +112,12 @@ export function Header({ user, notificationCount = 0 }: HeaderProps) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
+            {/* FIX: Add router push for profile */}
+            <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>Profile</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>Settings</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">Logout</DropdownMenuItem>
+            {/* FIX: Add onLogout handler */}
+            <DropdownMenuItem className="text-destructive" onClick={onLogout}>Logout</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

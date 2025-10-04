@@ -37,7 +37,7 @@ export interface Expense {
 
 export interface ApprovalStep {
   id: string
-  approverId: string
+  approver: string // FIX: Changed from approverId to approver to match backend
   approverName: string
   approverRole: string
   status: "pending" | "approved" | "rejected"
