@@ -1,6 +1,7 @@
 const Expense = require('../models/Expense');
 const User = require('../models/User');
 const Company = require('../models/Company');
+const Notification = require('../models/Notification'); // Make sure you have this model created
 const { createWorker } = require('tesseract.js');
 
 // Helper function to parse text and extract information
@@ -123,6 +124,7 @@ exports.scanReceipt = async (req, res) => {
     }
 };
 
+
 // @route   POST api/expenses
 // @desc    Create a new expense claim
 exports.createExpense = async (req, res) => {
@@ -153,11 +155,16 @@ exports.createExpense = async (req, res) => {
                 status: 'approved', // Auto-approved
             });
             const expense = await newExpense.save();
+            new Notification({
+              user: user.id,
+              message: `Your expense request for ${currency} ${amount} has been auto-approved.`,
+            }).save();
             return res.json(expense);
         }
 
 
         const approvalSteps = [];
+        const admin = await User.findOne({ company: user.company, role: 'admin' });
 
         // Step 1: Manager Approval (if required)
         if (company.requireManagerApproval && user.manager) {
@@ -169,12 +176,21 @@ exports.createExpense = async (req, res) => {
                     approverRole: manager.role,
                     status: 'pending',
                 });
+                new Notification({
+                  user: manager.id,
+                  message: `${user.name} submitted an expense request for ${currency} ${amount}.`,
+                }).save();
+                if (admin) {
+                  new Notification({
+                    user: admin.id,
+                    message: `${user.name} sent an expense request of ${currency} ${amount} to ${manager.name}.`,
+                  }).save();
+                }
             }
         }
 
         // Step 2: Admin Approval for high-value expenses (if required)
         if (company.requireAdminApproval && amount > company.approvalThreshold) {
-            const admin = await User.findOne({ company: user.company, role: 'admin' });
             if (admin) {
                 if (!approvalSteps.some(step => step.approver.toString() === admin._id.toString())) {
                     approvalSteps.push({
@@ -183,6 +199,10 @@ exports.createExpense = async (req, res) => {
                         approverRole: admin.role,
                         status: 'pending',
                     });
+                     new Notification({
+                        user: admin.id,
+                        message: `An expense request of ${currency} ${amount} from ${user.name} requires your approval.`,
+                    }).save();
                 }
             }
         }
@@ -201,6 +221,10 @@ exports.createExpense = async (req, res) => {
         });
 
         const expense = await newExpense.save();
+        new Notification({
+          user: user.id,
+          message: `Your expense request for ${currency} ${amount} has been submitted.`,
+        }).save();
         res.json(expense);
     } catch (err) {
         console.error(err.message);
@@ -340,7 +364,7 @@ exports.updateExpenseStatus = async (req, res) => {
             return res.status(403).json({ msg: 'Not authorized to approve/reject expenses' });
         }
 
-        const expense = await Expense.findById(expenseId);
+        const expense = await Expense.findById(expenseId).populate('employee');
         if (!expense) return res.status(404).json({ msg: 'Expense not found' });
         if (expense.company.toString() !== approver.company.toString()) {
             return res.status(403).json({ msg: 'Not authorized to act on this expense' });
@@ -357,13 +381,34 @@ exports.updateExpenseStatus = async (req, res) => {
         expense.approvalWorkflow[stepIndex].status = status;
         expense.approvalWorkflow[stepIndex].comments = comments;
         expense.approvalWorkflow[stepIndex].timestamp = new Date();
+        const admin = await User.findOne({ company: approver.company, role: 'admin' });
 
         if (status === 'rejected') {
             expense.status = 'rejected';
+            new Notification({
+              user: expense.employee.id,
+              message: `Your expense request for ${expense.currency} ${expense.amount} was rejected by ${approver.name}.`,
+            }).save();
+            if (admin && admin.id !== approver.id) {
+              new Notification({
+                user: admin.id,
+                message: `${approver.name} rejected an expense request of ${expense.currency} ${expense.amount} from ${expense.employee.name}.`,
+              }).save();
+            }
         } else {
             const allApproved = expense.approvalWorkflow.every(step => step.status === 'approved');
             if (allApproved) {
                 expense.status = 'approved';
+            }
+            new Notification({
+              user: expense.employee.id,
+              message: `Your expense request for ${expense.currency} ${expense.amount} was approved by ${approver.name}.`,
+            }).save();
+            if (admin && admin.id !== approver.id) {
+              new Notification({
+                user: admin.id,
+                message: `${approver.name} approved an expense request of ${expense.currency} ${expense.amount} from ${expense.employee.name}.`,
+              }).save();
             }
         }
         

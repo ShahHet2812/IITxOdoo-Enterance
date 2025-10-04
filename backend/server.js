@@ -18,6 +18,7 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/expenses', require('./routes/expenses'));
 app.use('/api/company', require('./routes/company'));
 app.use('/api/team', require('./routes/team')); // This line must be present
+app.use('/api/notifications', require('./routes/notifications')); // This line must be present
 
 // Serve uploads folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

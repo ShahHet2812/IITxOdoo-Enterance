@@ -73,3 +73,11 @@ export interface Currency {
   name: string
   symbol: string
 }
+
+export interface Notification {
+  _id: string;
+  user: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+}

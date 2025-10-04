@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 const bcrypt = require('bcryptjs');
 
 // @route   POST api/users
@@ -12,7 +13,7 @@ exports.createUser = async (req, res) => {
     if (adminUser.role !== 'admin') {
       return res.status(403).json({ msg: 'Access denied: Admin role required' });
     }
-    
+
     let user = await User.findOne({ email });
     if (user) {
       return res.status(400).json({ msg: 'User with this email already exists' });
@@ -31,7 +32,23 @@ exports.createUser = async (req, res) => {
     user.password = await bcrypt.hash(password, salt);
 
     await user.save();
-    
+
+    // Create notification for the new employee
+    if (managerId) {
+      const manager = await User.findById(managerId);
+      if (manager) {
+        new Notification({
+          user: user.id,
+          message: `You have been assigned a new manager: ${manager.name}.`,
+        }).save();
+        new Notification({
+          user: managerId,
+          message: `${user.name} has been added to your team.`,
+        }).save();
+      }
+    }
+
+
     const userResponse = {
         id: user._id,
         name: user.name,
@@ -64,7 +81,7 @@ exports.getUsers = async (req, res) => {
 
     // Find all users belonging to that company and exclude their passwords
     const users = await User.find({ company: adminUser.company }).select('-password');
-    
+
     const formattedUsers = users.map(user => ({
         id: user._id,
         name: user.name,
@@ -74,7 +91,7 @@ exports.getUsers = async (req, res) => {
         managerId: user.manager,
         createdAt: user.createdAt,
     }));
-    
+
     res.json(formattedUsers);
   } catch (err) {
     console.error(err.message);
@@ -109,7 +126,7 @@ exports.updateUser = async (req, res) => {
 
 
         user = await User.findByIdAndUpdate(id, { $set: userFields }, { new: true }).select('-password');
-        
+
         const userResponse = {
             id: user._id,
             name: user.name,
@@ -119,7 +136,7 @@ exports.updateUser = async (req, res) => {
             managerId: user.manager,
             createdAt: user.createdAt,
         };
-        
+
         res.json(userResponse);
 
     } catch (err) {
@@ -143,7 +160,7 @@ exports.deleteUser = async (req, res) => {
         if (!user || user.company.toString() !== adminUser.company.toString()) {
             return res.status(404).json({ msg: 'User not found' });
         }
-        
+
         if(user.id.toString() === adminUser.id.toString()){
             return res.status(400).json({ msg: 'Admin cannot delete their own account' });
         }

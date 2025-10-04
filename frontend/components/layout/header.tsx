@@ -12,18 +12,36 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Bell, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
-import type { User } from "@/lib/types"
+import type { User, Notification } from "@/lib/types"
 import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import api from "@/lib/api"
+import { formatDistanceToNow } from "date-fns"
 
 interface HeaderProps {
   user: User
-  notificationCount?: number
   onLogout: () => void // FIX: Add onLogout prop
 }
 
-export function Header({ user, notificationCount = 0, onLogout }: HeaderProps) {
+export function Header({ user, onLogout }: HeaderProps) {
   const { theme, setTheme } = useTheme()
-  const router = useRouter() // FIX: Add router
+  const router = useRouter()
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await api.get('/notifications');
+        setNotifications(res.data);
+        setUnreadCount(res.data.filter((n: Notification) => !n.read).length);
+      } catch (error) {
+        console.error("Failed to fetch notifications", error);
+      }
+    };
+    fetchNotifications();
+  }, []);
+
 
   const getInitials = (name: string) => {
     return name
@@ -55,9 +73,9 @@ export function Header({ user, notificationCount = 0, onLogout }: HeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
               <Bell className="h-5 w-5" />
-              {notificationCount > 0 && (
+              {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center">
-                  {notificationCount}
+                  {unreadCount}
                 </span>
               )}
             </Button>
@@ -65,24 +83,22 @@ export function Header({ user, notificationCount = 0, onLogout }: HeaderProps) {
           <DropdownMenuContent align="end" className="w-80">
             <DropdownMenuLabel>Notifications</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium">New expense from John Doe</p>
-                <p className="text-xs text-muted-foreground">Travel - $150.00</p>
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium">Your expense was approved</p>
-                <p className="text-xs text-muted-foreground">Office Supplies - $45.50</p>
-              </div>
-            </DropdownMenuItem>
-             <DropdownMenuItem>
-               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium">Team expense report ready</p>
-                <p className="text-xs text-muted-foreground">Q3 2025</p>
-              </div>
-            </DropdownMenuItem>
+            {notifications.length > 0 ? (
+              notifications.map((notification) => (
+                <DropdownMenuItem key={notification._id}>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium">{notification.message}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                    </p>
+                  </div>
+                </DropdownMenuItem>
+              ))
+            ) : (
+              <DropdownMenuItem>
+                <p className="text-sm text-muted-foreground">No new notifications</p>
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
 
