@@ -65,6 +65,7 @@ export function SignupForm() {
         password,
         companyName,
         currency: country.currency.code,
+        currencySymbol: country.currency.symbol, // FIX: Send currencySymbol to the backend
       }, {
         headers: { 'Content-Type': 'application/json' }
       });

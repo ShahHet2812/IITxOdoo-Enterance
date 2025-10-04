@@ -9,6 +9,12 @@ const CompanySchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  // FIX: Add currencySymbol to store the currency symbol
+  currencySymbol: {
+    type: String,
+    required: true,
+    default: '$',
+  },
   // Add these new fields for workflow configuration
   approvalThreshold: {
     type: Number,

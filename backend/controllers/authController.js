@@ -7,7 +7,8 @@ const jwt = require('jsonwebtoken');
 // @desc    Register a company and admin user
 // @access  Public
 exports.signup = async (req, res) => {
-  const { name, email, password, companyName, currency } = req.body;
+  // FIX: Destructure currencySymbol from request body
+  const { name, email, password, companyName, currency, currencySymbol } = req.body;
 
   try {
     let user = await User.findOne({ email });
@@ -18,6 +19,7 @@ exports.signup = async (req, res) => {
     const company = new Company({
       name: companyName,
       currency,
+      currencySymbol, // FIX: Save currencySymbol to the new company
     });
     await company.save();
 
@@ -103,7 +105,17 @@ exports.getMe = async (req, res) => {
     if (!user) {
         return res.status(404).json({ msg: 'User not found' });
     }
-    res.json(user);
+    // FIX: Manually create the user object to ensure the id field is present.
+    const userResponse = {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        company: user.company,
+        manager: user.manager,
+        createdAt: user.createdAt
+    };
+    res.json(userResponse);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
