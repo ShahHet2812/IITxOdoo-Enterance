@@ -1,0 +1,27 @@
+const mongoose = require('mongoose');
+
+const CompanySchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+  },
+  currency: {
+    type: String,
+    required: true,
+  },
+  // Add these new fields for workflow configuration
+  approvalThreshold: {
+    type: Number,
+    default: 1000,
+  },
+  requireManagerApproval: {
+    type: Boolean,
+    default: true,
+  },
+  requireAdminApproval: {
+    type: Boolean,
+    default: false, // Default to false for simplicity
+  },
+}, { timestamps: true });
+
+module.exports = mongoose.model('Company', CompanySchema);
