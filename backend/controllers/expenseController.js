@@ -12,6 +12,7 @@ const parseReceipt = (text) => {
     let description = '';
     let vendor = '';
     let category = '';
+    let currency = null; // New variable for currency
 
     // Keywords for category detection
     const categoryKeywords = {
@@ -21,6 +22,17 @@ const parseReceipt = (text) => {
         'Software & Subscriptions': ['software', 'subscription', 'aws', 'google'],
         'Marketing': ['marketing', 'ads', 'advertising'],
         'Equipment': ['electronics', 'best buy', 'apple store'],
+    };
+
+    // Map of symbols/codes to 3-letter currency codes
+    const currencySymbols = {
+        '$': 'USD', 'USD': 'USD',
+        '€': 'EUR', 'EUR': 'EUR',
+        '£': 'GBP', 'GBP': 'GBP',
+        '₹': 'INR', 'INR': 'INR',
+        '¥': 'JPY', 'JPY': 'JPY',
+        'C$': 'CAD', 'CAD': 'CAD',
+        'A$': 'AUD', 'AUD': 'AUD',
     };
     
     // More robust regex patterns for date matching
@@ -43,7 +55,6 @@ const parseReceipt = (text) => {
         for (const regex of dateRegexes) {
             const dateMatch = line.match(regex);
             if (dateMatch) {
-                // Check if the matched string is a valid date
                 const parsedDate = new Date(dateMatch[0]);
                 if (!isNaN(parsedDate.getTime())) {
                     date = parsedDate;
@@ -52,6 +63,22 @@ const parseReceipt = (text) => {
             }
         }
     }
+
+    // Find currency by checking for symbols/codes
+    for (const line of lines) {
+        if (currency) break;
+        // Prioritize longer keys first (e.g., 'USD' before '$') to avoid incorrect matches
+        const sortedSymbols = Object.keys(currencySymbols).sort((a, b) => b.length - a.length);
+        for (const symbol of sortedSymbols) {
+             // Using a regex to match the symbol as a whole word or character
+            const currencyRegex = new RegExp(`\\b${symbol.replace('$', '\\$').replace('€', '€').replace('£', '£').replace('₹', '₹').replace('¥', '¥')}\\b`, 'i');
+            if (currencyRegex.test(line) || line.includes(symbol)) {
+                currency = currencySymbols[symbol];
+                break;
+            }
+        }
+    }
+
 
     lines.forEach(line => {
         const lowerCaseLine = line.toLowerCase();
@@ -96,7 +123,8 @@ const parseReceipt = (text) => {
         date,
         description: description || vendor,
         vendor,
-        category: category || 'Other' // Default to 'Other' if no category is found
+        category: category || 'Other', // Default to 'Other' if no category is found
+        currency // Return the detected currency
     };
 };
 

@@ -20,7 +20,7 @@ import { formatDistanceToNow } from "date-fns"
 
 interface HeaderProps {
   user: User
-  onLogout: () => void // FIX: Add onLogout prop
+  onLogout: () => void
 }
 
 export function Header({ user, onLogout }: HeaderProps) {
@@ -41,6 +41,17 @@ export function Header({ user, onLogout }: HeaderProps) {
     };
     fetchNotifications();
   }, []);
+
+  const handleNotificationOpen = async (open: boolean) => {
+    if (open && unreadCount > 0) {
+      try {
+        setUnreadCount(0);
+        await api.put('/notifications/mark-read');
+      } catch (error) {
+        console.error("Failed to mark notifications as read", error);
+      }
+    }
+  };
 
 
   const getInitials = (name: string) => {
@@ -68,8 +79,7 @@ export function Header({ user, onLogout }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-3">
-        {/* FIX: Add Dropdown for Notifications */}
-        <DropdownMenu>
+        <DropdownMenu onOpenChange={handleNotificationOpen}>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
               <Bell className="h-5 w-5" />
@@ -128,11 +138,9 @@ export function Header({ user, onLogout }: HeaderProps) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {/* FIX: Add router push for profile */}
             <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>Profile</DropdownMenuItem>
             <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>Settings</DropdownMenuItem>
             <DropdownMenuSeparator />
-            {/* FIX: Add onLogout handler */}
             <DropdownMenuItem className="text-destructive" onClick={onLogout}>Logout</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
